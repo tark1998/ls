@@ -179,7 +179,7 @@
 					});
 					$('iframe:not([id])').attr('id','video');
 					var chat = $('<iframe align="left" frameborder="0" scrolling="no" id="chat_embed" > </iframe>');
-					chat.attr('src',"https://www.twitch.tv/embed/"+name+"/chat?darkpopout&parent=tark1998.github.io/ls/");
+					chat.attr('src',"https://www.twitch.tv/embed/"+name+"/chat?darkpopout&parent=tark1998.github.io");
 					player_div.append(chat);
 				}else{
 					now.splice(now.indexOf(name),1);
@@ -336,7 +336,7 @@
 					video: video_id,
 					collection: "",
 					// only needed if your site is also embedded on embed.example.com and othersite.example.com
-					parent: ["tark1998.github.io/ls/"]
+					parent: ["tark1998.github.io"]
 				};
 				var player = new Twitch.Player(video_id, options);
 				$('iframe:not([id])').attr('id','video');
