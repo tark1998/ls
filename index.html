@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script src='https://code.jquery.com/jquery-3.4.1.min.js'></script>
+		<script src= "https://player.twitch.tv/js/embed/v1.js"></script>
+		<title>list</title>
+		<link href="./ls.ico" rel="shortcut icon" type="image/x-icon">
+
+		<style>
+		table,th,td{
+			border:1px solid #bcbcbc;
+		}
+		body{
+			background-color:#18181b;
+			color:white;
+		}
+		a { color: purple; text-decoration: underline; cursor:pointer;}
+		
+		div.player{
+			width:100%;
+			float:left;
+		}
+		
+		iframe#video{
+			float:left;
+			width: 80%; 
+			height: 45vw;
+		}
+		iframe#chat_embed{
+			width: 20%; 
+			height:45vw;
+		}
+		body::-webkit-scrollbar {
+		  display: none;
+		}
+		</style>
+	</head>
+	<body>
+		<button id='ref'>새로고침</button>
+		<button id='black'>흑백모드</button>
+		<button id='hide'>숨기기</button>
+		<button id='mobile'>모바일</button>
+		<a href='https://id.twitch.tv/oauth2/authorize?client_id=w1mfrv3ktirxrbx6ri3mtj6kydn4cl&redirect_uri=http://localhost:3000/recievecode&response_type=code&scope=user:edit:follows'>code얻기</a>
+		<input type="text" id="plus"><button id='plus'>추가/제거</button>
+		<input type="text" id="vod"><button id='vod'>vod</button>
+		<input type="text" id="yt"><button id='yt'>youtube</button>
+		<table class='sortable'>
+			<thead>
+				<tr>
+				<th>No.</th>
+				<th>프리뷰</th>
+				<th>이름</th>
+				<th>제목</th>
+				<th>게임</th>
+				<th>시청자수</th>
+				<th>시간</th>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+		<div class="players"></div>
+		<script>
+		
+			//var tag = document.createElement('script');
+			//tag.src = "https://www.youtube.com/iframe_api";
+			//var firstScriptTag = document.getElementsByTagName('script')[0];
+			//firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+			
+			var is_mobile = false;
+			
+			function check_inputs_focus(){
+				var check_ = 1;
+				document.querySelectorAll('input').forEach(function(input_ele){
+					if(input_ele === document.activeElement){
+						check_ = 0;
+					}
+				});
+				return check_;
+			}
+			
+			loadfol();
+			
+			function add_to_table(tbody,num){
+				$.ajax('https://api.twitch.tv/kraken/streams/'+num,{headers:{"Client-ID": my_client_id,'Accept': 'application/vnd.twitchtv.v5+json'}}).done(function(data){
+					console.log(data);
+					if(data.stream){
+						var tr = $('<tr></tr>');
+						tr.attr('name',data.stream.channel.name);
+
+						var td = $('<td></td>');
+						tr.append(td);
+
+						var td = $('<td></td>');
+						var img = $('<img></img>');
+						img.attr('src',data.stream.preview.small + '?' + (new Date()).getTime());
+						td.append(img);
+						tr.append(td);
+
+						var td = $('<td></td>');
+						td.append(data.stream.channel.display_name);
+						tr.append(td);
+
+						var td = $('<td></td>');
+						var aa = $('<a onclick=\"show_player(\''+data.stream.channel.name+'\');\"></a>');
+						aa.append(data.stream.channel.status);
+						td.append(aa);
+						tr.append(td);
+
+
+						var td = $('<td></td>');
+						td.append(data.stream.channel.game);
+						tr.append(td);
+
+						var td = $('<td></td>');
+						td.append(data.stream.viewers);
+						tr.append(td);
+						
+						var td = $('<td></td>');
+						td.append(conv_sec_to_time(Math.floor((Date.now()-Date.parse(data.stream.created_at))/1000)));
+						td.attr('id',Math.floor((Date.now()-Date.parse(data.stream.created_at))/1000));
+						td.attr('class', 'duration');
+						tr.append(td);
+						
+						if(tbody[0].childElementCount==0){
+							tbody.append(tr);
+						}else{
+							if(parseInt(data.stream.viewers)>parseInt(tbody[0].children[0].children[5].innerText)){
+								tbody.prepend(tr);
+							}
+							for(var j = 0; j<tbody[0].childElementCount-1 ; j++){
+								if(parseInt(data.stream.viewers)<=parseInt(tbody[0].children[j].children[5].innerText)&&parseInt(data.stream.viewers)>parseInt(tbody[0].children[j+1].children[5].innerText)){
+									tr.insertAfter(tbody[0].children[j]);
+								}
+							}
+							if(parseInt(data.stream.viewers)<parseInt(tbody[0].children[j].children[5].innerText)){
+								tbody.append(tr);
+							}
+						}
+						
+						tbody.children().each(function(idx,val){
+							$(this).find('td')[0].innerText = idx+1;
+						});	
+					}
+				});
+			}
+			
+			function loadfol(){
+
+				$('tbody').remove();
+				var tbody = $('<tbody></tbody>');
+				
+				var nums = ["530160982", "478734460", "130968411", "134433708", "134282128", "103861159", "137736535", "134301181", "138728503", "517444666", "471136540", "103825127", "66375105", "142012105", "179818454", "148842622", "62356185", "404647505", "139470326", "49045679", "147090450", "139635292", "46834933", "138515021"]
+					
+				for(var i = 0; i< nums.length;i++){
+					var num = nums[i];
+
+					add_to_table(tbody,num);
+
+				}
+				
+				$('table').append(tbody);
+
+			}
+			
+			var now = [];
+			function show_player(name){
+				$('div#'+name).remove();
+				console.log(name);
+				if(!now.includes(name)){
+					now.push(name);
+					var player_div =new $('<div class="player"></div>');
+					player_div.attr('id',name)
+					$('div.players').append(player_div);
+					
+					var player = new Twitch.Player(name, {
+						channel: name
+					});
+					$('iframe:not([id])').attr('id','video');
+					var chat = $('<iframe align="left" frameborder="0" scrolling="no" id="chat_embed" > </iframe>');
+					chat.attr('src',"https://www.twitch.tv/embed/"+name+"/chat?darkpopout&parent=localhost&parent=127.0.0.1");
+					player_div.append(chat);
+				}else{
+					now.splice(now.indexOf(name),1);
+				}
+			}
+			
+			$('button#ref').on('click',function(){
+				loadfol();
+			});
+			function changeclr(){
+				if(document.body.style.backgroundColor=='white'){
+					document.body.style.backgroundColor='#18181b';
+					document.body.style.color='white';
+				}else{
+					document.body.style.backgroundColor='white';
+					document.body.style.color='black';
+				}
+			}
+			
+			$('button#black').on('click',function(){
+				changeclr();
+			});
+			
+			// define a handler
+			function doc_keyUp(e) {
+				// this would test for whichever key is 40 and the ctrl key at the same time
+				if (48 <= e.keyCode && e.keyCode <= 57 && check_inputs_focus()) {
+					// call your function to do the thing
+					var name = $('tbody').children().eq((e.keyCode-39)%10).attr('name');
+					show_player(name);
+				}
+				else if(192 == e.keyCode && check_inputs_focus){
+					document.querySelector('button#hide').click();
+				}
+			}
+			// register the handler 
+			
+			document.addEventListener('keyup', doc_keyUp, false);
+			$('button#plus').on('click',function(){
+				var plus = $('input#plus').val();
+				show_player(plus)
+			});
+			
+			var input = document.querySelector("input#plus");
+			input.addEventListener("keyup", function(event) {
+				if (event.keyCode === 13){
+					event.preventDefault();
+					document.querySelector("button#plus").click();
+				}
+			});
+			
+			
+			//second to time
+			function conv_sec_to_time(sec_num) {
+				var hours   = Math.floor(sec_num / 3600);
+				var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+				var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+				//if (hours   < 10) {hours   = "0"+hours;}
+				if (minutes < 10) {minutes = "0"+minutes;}
+				if (seconds < 10) {seconds = "0"+seconds;}
+				return hours+':'+minutes+':'+seconds;
+			}
+			
+			function update_duration(){
+				var durations = document.querySelectorAll('td.duration');
+				
+				durations.forEach(function(duration){
+				  var sec = duration.id*1 + 1;
+				  duration.id = duration.id*1 + 1;
+				  
+				  duration.innerText = conv_sec_to_time(sec);
+				})
+			}
+			
+			setInterval(update_duration, 1000);
+			setInterval(loadfol, 60000);
+			
+			$('button#hide').on('click',function(){
+				var x = document.querySelector('.sortable');//.children[1];
+				if (x.style.display === "none") {
+					x.style.display = "block";
+				  } else {
+					x.style.display = "none";
+				  }
+			});
+			
+			
+			$('button#mobile').on('click',function(){
+				var player = document.querySelectorAll('div.player');
+				player.forEach(function(ele){
+					if (!is_mobile){
+						ele.style.width = "calc(100%/"+now.length+")";
+					}else{
+						ele.style.width = "100%";
+					}
+				})
+				var x = document.querySelectorAll('iframe#video');//.children[1];
+				x.forEach(function(ele){
+					if (!is_mobile){
+						//ele.style.width = "calc(100%/"+now.length+")";
+						ele.style.width = "100%";
+						ele.style.height = "calc(56.25vw/"+now.length+")";
+					}else{
+						ele.style.width = "80%";
+						ele.style.height = "45vw";
+					}
+				})
+				var y = document.querySelectorAll('iframe#chat_embed');//.children[1];
+				y.forEach(function(ele){
+					if (!is_mobile){
+						//ele.style.width = "calc(100%/"+now.length+")";
+						ele.style.width = "100%";
+						ele.style.height = "calc(100vh - 56.25vw/"+now.length+")";
+					}else{
+						ele.style.width = "20%";
+						ele.style.height = "45vw";
+					}
+				})
+				if(!is_mobile){
+					is_mobile = true;
+				}else{
+					is_mobile = false;
+				}
+			});
+			
+			//다시보기 불러오기
+			$('button#vod').on('click',function(){
+				var video_id = $('input#vod').val();
+				$('div#'+video_id).remove();
+				if(!now.includes(video_id)){
+					now.push(video_id);
+					embed_video(video_id,frome_video_to_channel(video_id))
+				}else{
+					now.splice(now.indexOf(video_id),1);
+				}
+			});
+			
+			
+			function frome_video_to_channel(video_id){
+				$.ajax('https://api.twitch.tv/kraken/videos/'+video_id,{headers:{"Client-ID": my_client_id,'Accept': 'application/vnd.twitchtv.v5+json'}}).done(function(data){
+					return data["channel"]["_id"];
+				});
+			}
+			
+			function embed_video(video_id,channel_id){
+				var player_div =new $('<div class="player"></div>');
+					player_div.attr('id',video_id)
+					$('div.players').append(player_div);
+				var options = {
+					//width: "100%",
+					//height: "100%",
+					channel: channel_id,
+					video: video_id,
+					collection: "",
+					// only needed if your site is also embedded on embed.example.com and othersite.example.com
+					parent: ["localhost","127.0.0.1"]
+				};
+				var player = new Twitch.Player(video_id, options);
+				$('iframe:not([id])').attr('id','video');
+			}
+			var input = document.querySelector("input#vod");
+			input.addEventListener("keyup", function(event) {
+				if (event.keyCode === 13) {
+					event.preventDefault();
+					document.querySelector("button#vod").click();
+				}
+			});
+			
+			//유튜브 불러오기
+			$('button#yt').on('click',function(){
+				var video_id = $('input#yt').val();
+				$('div#'+video_id).remove();
+				if(!now.includes(video_id)){
+					now.push(video_id);
+					embed_yt(video_id);
+				}else{
+					now.splice(now.indexOf(video_id),1);
+				}
+			});
+			var input = document.querySelector("input#yt");
+			input.addEventListener("keyup", function(event) {
+				if (event.keyCode === 13) {
+					event.preventDefault();
+					document.querySelector("button#yt").click();
+				}
+			});
+			
+			function embed_yt(video_id){
+				var player_div =new $('<div class="player"></div>');
+				player_div.attr('id',video_id);
+				$('div.players').append(player_div);
+				var yt_iframe = $('<iframe src="https://www.youtube.com/embed/'+video_id+'" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>');
+				player_div.append(yt_iframe);
+				$('iframe:not([id])').attr('id','video');
+			}
+			
+			var player;
+			function onYouTubeIframeAPIReady(video_id) {
+			
+				//var div_yt =new $('<div class="yt_player"></div>');
+				//var div_player =new $('<div class="player"></div>');
+				//div_player.attr('id',video_id);
+				//div_player.append(div_yt);
+				//$('div.players').append(div_player);
+				
+				player = new YT.Player('yt_player', {
+				videoId: video_id,
+				events: {
+					height: '390',
+					width: '640',
+					'onReady': onPlayerReady,
+					'onStateChange': onPlayerStateChange
+					}
+				});
+			}
+			function onPlayerReady(event) {
+				event.target.playVideo();
+			}
+			var done = false;
+			function onPlayerStateChange(event) {
+				if (event == 0) {
+					$('div#'+video_id).remove();
+					now.splice(now.indexOf(video_id),1);
+				}
+			}
+			
+		</script>
+	</body>
+</html>
