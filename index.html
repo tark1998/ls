@@ -83,7 +83,7 @@
 			loadfol();
 			
 			function add_to_table(tbody,num){
-				$.ajax('https://api.twitch.tv/kraken/streams/'+num,{headers:{"Client-ID": my_client_id,'Accept': 'application/vnd.twitchtv.v5+json'}}).done(function(data){
+				$.ajax('https://api.twitch.tv/kraken/streams/'+num,{headers:{"Client-ID": 'w1mfrv3ktirxrbx6ri3mtj6kydn4cl','Accept': 'application/vnd.twitchtv.v5+json'}}).done(function(data){
 					console.log(data);
 					if(data.stream){
 						var tr = $('<tr></tr>');
@@ -179,7 +179,7 @@
 					});
 					$('iframe:not([id])').attr('id','video');
 					var chat = $('<iframe align="left" frameborder="0" scrolling="no" id="chat_embed" > </iframe>');
-					chat.attr('src',"https://www.twitch.tv/embed/"+name+"/chat?darkpopout&parent=localhost&parent=127.0.0.1");
+					chat.attr('src',"https://www.twitch.tv/embed/"+name+"/chat?darkpopout&parent=tark1998.github.io/ls/");
 					player_div.append(chat);
 				}else{
 					now.splice(now.indexOf(name),1);
@@ -336,7 +336,7 @@
 					video: video_id,
 					collection: "",
 					// only needed if your site is also embedded on embed.example.com and othersite.example.com
-					parent: ["localhost","127.0.0.1"]
+					parent: ["tark1998.github.io/ls/"]
 				};
 				var player = new Twitch.Player(video_id, options);
 				$('iframe:not([id])').attr('id','video');
