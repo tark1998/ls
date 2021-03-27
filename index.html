@@ -320,7 +320,7 @@
 			
 			
 			function frome_video_to_channel(video_id){
-				$.ajax('https://api.twitch.tv/kraken/videos/'+video_id,{headers:{"Client-ID": my_client_id,'Accept': 'application/vnd.twitchtv.v5+json'}}).done(function(data){
+				$.ajax('https://api.twitch.tv/kraken/videos/'+video_id,{headers:{"Client-ID": 'w1mfrv3ktirxrbx6ri3mtj6kydn4cl','Accept': 'application/vnd.twitchtv.v5+json'}}).done(function(data){
 					return data["channel"]["_id"];
 				});
 			}
