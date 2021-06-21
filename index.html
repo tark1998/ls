@@ -84,7 +84,7 @@
 			
 			function add_to_table(tbody,num){
 				$.ajax('https://api.twitch.tv/kraken/streams/'+num,{headers:{"Client-ID": 'w1mfrv3ktirxrbx6ri3mtj6kydn4cl','Accept': 'application/vnd.twitchtv.v5+json'}}).done(function(data){
-					console.log(data);
+					//console.log(data);
 					if(data.stream){
 						var tr = $('<tr></tr>');
 						tr.attr('name',data.stream.channel.name);
